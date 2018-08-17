@@ -2,12 +2,12 @@
 
 
 * [Sources](#sources)
-  * [SourceClass.php](#sourceclass)
-  * [TargetClass.php](#targetclass)
+  * [SourceClass](#sourceclass)
+  * [TargetClass](#targetclass)
   * [Init read tests](#init-read-tests)
   * [Read tests](#read-tests)
-  * [Init](#init-write)
-  * [Write](#write-test)
+  * [Init write tests](#init-write-tests)
+  * [Write tests](#write-tests)
 * [Run](#run)
 * [Results](#results)
   * [Read results](#read-results)
