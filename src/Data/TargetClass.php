@@ -1,6 +1,6 @@
 <?php
 
-namespace Accessor;
+namespace Accessor\Data;
 
 class TargetClass
 {

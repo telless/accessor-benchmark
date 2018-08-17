@@ -1,19 +1,21 @@
-# Benchmark скорости чтения\записи закрытых свойств различными методами
+# Benchmark read\write protected properties
 
 
-* [Исходники](#исходники)
-  * [SourceClass.php](#sourceclassphp)
-  * [TargetClass.php](#targetclassphp)
-  * [Инициализация](#инициализация)
-  * [Тесты чтения](#тесты-чтения)
-  * [Тесты записи](#тесты-записи)
-* [Запуск тестов](#запуск-тестов)
-* [Результаты](#таблица-результатов)
+* [Sources](#sources)
+  * [SourceClass.php](#sourceclass)
+  * [TargetClass.php](#targetclass)
+  * [Init read tests](#init-read-tests)
+  * [Read tests](#read-tests)
+  * [Init](#init-write)
+  * [Write](#write-test)
+* [Run](#run)
+* [Results](#results)
+  * [Read results](#read-results)
+  * [Write results](#write-results)
 
 
-### Исходники
-#### SourceClass.php
-
+### Sources
+#### SourceClass
 ```php
 <?php
 
@@ -40,8 +42,7 @@ class SourceClass
 }
 ```
 
-#### TargetClass.php
-
+#### TargetClass
 ```php
 <?php
 
@@ -63,33 +64,22 @@ class TargetClass
 
 ```
 
-#### Инициализация
+#### Init read tests
 
 ```php
 <?php
 
 public function init()
 {
-    $this->targetObject = new TargetClass();
     $this->sourceObject = new SourceClass();
-
     $this->sourceReflection = new \ReflectionClass(SourceClass::class);
-    $this->targetReflection = new \ReflectionClass(TargetClass::class);
-
     $this->readClosure = function ($field) {
-        return $this->$field;
-    };
-    $this->writeClosure = function ($field, $value) {
-        $this->$field = $value;
-    };
-
-    $this->readReferenceClosure = function&($field) {
         return $this->$field;
     };
 }
 ```
 
-#### Тесты чтения
+#### Read tests
 ```php
 <?php
 
@@ -153,8 +143,30 @@ public function benchClosureWithReflectedPropertiesRead()
     return $res;
 }
 ```
+#### Init write tests
+```php
+<?php
 
-#### Тесты записи
+public function init()
+{
+    $this->sourceObject = new SourceClass();
+    $this->sourceReflection = new \ReflectionClass(SourceClass::class);
+    $this->readClosure = function ($field) {
+        return $this->$field;
+    };
+
+    $this->targetObject = new TargetClass();
+    $this->targetReflection = new \ReflectionClass(TargetClass::class);
+    $this->readReferenceClosure = function&($field) {
+        return $this->$field;
+    };
+    $this->writeClosure = function ($field, $value) {
+        $this->$field = $value;
+    };
+}
+```
+
+#### Write tests
 ```php
 <?php
 
@@ -213,29 +225,41 @@ public function benchClosureWithReflectedPropertiesWrite()
 ```
 
 
-### Запуск тестов
+### Run
 ```
 composer install
-vendor/bin/phpbench run src/AccessorBenchmark.php --report='generator: "table", cols: ["subject", "best", "mode", "worst", "diff"], diff_col: "mode", sort: {mode: "desc"}'
+vendor/bin/phpbench run src/Benchmark/ReadBenchmark.php --report='generator: "table", cols: ["subject", "best", "mode", "worst", "diff"], diff_col: "mode", sort: {mode: "asc"}'
+vendor/bin/phpbench run src/Benchmark/WriteBenchmark.php --report='generator: "table", cols: ["subject", "best", "mode", "worst", "diff"], diff_col: "mode", sort: {mode: "asc"}'
 ```
 
-### Таблица результатов
+### Results
 
+Benchmarks ran with 5 iterations of 1,000,000 revs
+
+#### Read results
+```
++------------------------------------------+---------+---------+---------+--------+
+| subject                                  | best    | mode    | worst   | diff   |
++------------------------------------------+---------+---------+---------+--------+
+| benchGettersRead                         | 0.115μs | 0.116μs | 0.116μs | 1.00x  |
+| benchArrayRead                           | 0.216μs | 0.219μs | 0.222μs | 1.90x  |
+| benchClosureWithDefinedPropertiesRead    | 0.745μs | 0.782μs | 0.790μs | 6.77x  |
+| benchReflectionRead                      | 1.168μs | 1.170μs | 1.180μs | 10.12x |
+| benchReflectionWithDefinedPropertiesRead | 1.260μs | 1.268μs | 1.310μs | 10.97x |
+| benchClosureWithReflectedPropertiesRead  | 1.512μs | 1.544μs | 1.553μs | 13.36x |
++------------------------------------------+---------+---------+---------+--------+
+```
+
+#### Write results
 ```
 +---------------------------------------------------+---------+---------+---------+--------+
 | subject                                           | best    | mode    | worst   | diff   |
 +---------------------------------------------------+---------+---------+---------+--------+
-| benchReflectionWrite                              | 6.464μs | 6.508μs | 6.839μs | 54.43x |
-| benchReferenceClosureWithReflectedPropertiesWrite | 2.091μs | 2.131μs | 2.177μs | 17.82x |
-| benchClosureWithReflectedPropertiesWrite          | 1.993μs | 2.023μs | 2.093μs | 16.92x |
-| benchClosureWithReflectedPropertiesRead           | 1.426μs | 1.491μs | 2.431μs | 12.47x |
-| benchReferenceClosureWithDefinedPropertiesWrite   | 1.291μs | 1.296μs | 1.324μs | 10.84x |
-| benchReflectionWithDefinedPropertiesRead          | 1.247μs | 1.295μs | 1.321μs | 10.83x |
-| benchClosureWithDefinedPropertiesWrite            | 1.228μs | 1.257μs | 1.271μs | 10.51x |
-| benchReflectionRead                               | 1.123μs | 1.149μs | 1.183μs | 9.61x  |
-| benchClosureWithDefinedPropertiesRead             | 0.722μs | 0.733μs | 0.757μs | 6.13x  |
-| benchArrayRead                                    | 0.204μs | 0.211μs | 0.212μs | 1.76x  |
-| benchGettersSettersWrite                          | 0.197μs | 0.207μs | 0.209μs | 1.74x  |
-| benchGettersRead                                  | 0.110μs | 0.120μs | 0.124μs | 1.00x  |
+| benchGettersSettersWrite                          | 0.196μs | 0.203μs | 0.212μs | 1.00x  |
+| benchReferenceClosureWithDefinedPropertiesWrite   | 1.250μs | 1.263μs | 1.339μs | 6.23x  |
+| benchClosureWithDefinedPropertiesWrite            | 1.263μs | 1.302μs | 1.328μs | 6.43x  |
+| benchClosureWithReflectedPropertiesWrite          | 2.035μs | 2.102μs | 2.122μs | 10.38x |
+| benchReferenceClosureWithReflectedPropertiesWrite | 2.158μs | 2.179μs | 2.279μs | 10.76x |
+| benchReflectionWrite                              | 6.423μs | 6.644μs | 9.178μs | 32.80x |
 +---------------------------------------------------+---------+---------+---------+--------+
 ```
