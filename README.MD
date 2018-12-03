@@ -1,6 +1,5 @@
 # Benchmark read\write protected properties
 
-
 * [Sources](#sources)
   * [SourceClass](#sourceclass)
   * [TargetClass](#targetclass)
